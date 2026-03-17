@@ -72,6 +72,14 @@ const LmStudioPanel: React.FC<LmStudioPanelProps> = ({
             AI Prompt Assistant
           </span>
           <span
+            role="status"
+            aria-label={
+              connected === true
+                ? "Connected"
+                : connected === false
+                  ? "Disconnected"
+                  : "Not tested"
+            }
             className={`inline-block w-2 h-2 rounded-full ${
               connected === true
                 ? "bg-green-500"
@@ -93,6 +101,7 @@ const LmStudioPanel: React.FC<LmStudioPanelProps> = ({
             type="button"
             onClick={() => setShowSettings((s) => !s)}
             className="text-xs px-2 py-1 rounded hover:bg-[var(--item-hover-background-color)] text-[var(--text-color)]"
+            aria-label="Settings"
             title="Settings"
           >
             ⚙
@@ -101,6 +110,7 @@ const LmStudioPanel: React.FC<LmStudioPanelProps> = ({
             type="button"
             onClick={onClearChat}
             className="text-xs px-2 py-1 rounded hover:bg-[var(--item-hover-background-color)] text-[var(--text-color)]"
+            aria-label="Clear chat"
             title="Clear chat"
           >
             🗑
@@ -109,6 +119,7 @@ const LmStudioPanel: React.FC<LmStudioPanelProps> = ({
             type="button"
             onClick={onClose}
             className="text-xs px-2 py-1 rounded hover:bg-[var(--item-hover-background-color)] text-[var(--text-color)]"
+            aria-label="Close panel"
             title="Close panel"
           >
             ✕

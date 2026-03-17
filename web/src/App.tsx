@@ -45,6 +45,8 @@ function App () {
   const handleUseAsPrompt = (text: string) => {
     setPrefillText(text)
     setLmStudioOpen(false)
+    // Clear prefill after a tick so the effect can fire again for the same text
+    setTimeout(() => setPrefillText(undefined), 0)
   }
 
   return (
@@ -74,7 +76,7 @@ function App () {
       <div className="absolute bottom-0 w-full">
         {lmStudioOpen && (
           <LmStudioPanel
-            className="max-w-3xl mx-auto mb-2 mx-2"
+            className="max-w-3xl mx-auto mb-2 px-2"
             url={lmStudio.url}
             setUrl={lmStudio.setUrl}
             messages={lmStudio.messages}
