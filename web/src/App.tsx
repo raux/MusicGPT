@@ -10,14 +10,19 @@ import { useChats } from "./backend/useChats.ts";
 import ResponsiveDrawer, { ResponsiveDrawerEntry } from "./components/ResponsiveDrawer.tsx";
 import { ToggleButton } from "./components/ToggleButton.tsx";
 import { useRoutedApp } from "./RoutedAppHooks.ts";
+import LmStudioPanel from "./components/LmStudioPanel.tsx";
+import { useLmStudio } from "./backend/useLmStudio.ts";
 
 function App () {
   const { chatId, goToChat } = useRoutedApp()
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [lmStudioOpen, setLmStudioOpen] = useState(false)
+  const [prefillText, setPrefillText] = useState<string>()
 
   const { chats, setChatMetadata } = useChats()
   const { sendMessage, abortLast, history } = useChat(chatId, goToChat)
+  const lmStudio = useLmStudio()
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -36,6 +41,12 @@ function App () {
     })),
     [setChatMetadata, chats]
   )
+
+  const handleUseAsPrompt = (text: string) => {
+    setPrefillText(text)
+    // Clear prefill after a tick so the effect can fire again for the same text
+    setTimeout(() => setPrefillText(undefined), 0)
+  }
 
   return (
     <div
@@ -62,12 +73,32 @@ function App () {
         <div className="h-20"/>
       </div>
       <div className="absolute bottom-0 w-full">
+        {lmStudioOpen && (
+          <LmStudioPanel
+            className="max-w-3xl mx-auto mb-2 px-2"
+            url={lmStudio.url}
+            setUrl={lmStudio.setUrl}
+            messages={lmStudio.messages}
+            loading={lmStudio.loading}
+            error={lmStudio.error}
+            connected={lmStudio.connected}
+            onSendMessage={lmStudio.sendMessage}
+            onCancelRequest={lmStudio.cancelRequest}
+            onClearChat={lmStudio.clearChat}
+            onTestConnection={lmStudio.testConnection}
+            onUseAsPrompt={handleUseAsPrompt}
+            onClose={() => setLmStudioOpen(false)}
+          />
+        )}
         <ChatInput
           className={'max-w-3xl p-2 mx-auto'}
           inputFocusToken={chatId}
           onSend={sendMessage}
           onCancel={abortLast}
           loading={(history?.lastAi()?.progress ?? 1) < 1}
+          onToggleLmStudio={() => setLmStudioOpen(o => !o)}
+          lmStudioOpen={lmStudioOpen}
+          prefillText={prefillText}
         />
       </div>
     </div>
