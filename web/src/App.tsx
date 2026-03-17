@@ -44,7 +44,6 @@ function App () {
 
   const handleUseAsPrompt = (text: string) => {
     setPrefillText(text)
-    setLmStudioOpen(false)
     // Clear prefill after a tick so the effect can fire again for the same text
     setTimeout(() => setPrefillText(undefined), 0)
   }

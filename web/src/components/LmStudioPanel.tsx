@@ -36,6 +36,8 @@ const LmStudioPanel: React.FC<LmStudioPanelProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [showSettings, setShowSettings] = useState(connected !== true);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -46,6 +48,10 @@ const LmStudioPanel: React.FC<LmStudioPanelProps> = ({
   useEffect(() => {
     if (!loading) inputRef.current?.focus();
   }, [loading]);
+
+  useEffect(() => {
+    return () => { clearTimeout(copiedTimerRef.current); };
+  }, []);
 
   const handleSubmit = (e: { preventDefault(): void }) => {
     e.preventDefault();
@@ -164,7 +170,8 @@ const LmStudioPanel: React.FC<LmStudioPanelProps> = ({
           <p className="text-xs text-[var(--text-faded-color)] text-center py-4">
             Chat with AI to generate music prompts.
             <br />
-            Click "Use" on any response to fill the prompt field.
+            Have multiple conversations, then click "Use as prompt" on any
+            response to fill the prompt field.
           </p>
         )}
         {messages.map((msg, i) => (
@@ -184,10 +191,19 @@ const LmStudioPanel: React.FC<LmStudioPanelProps> = ({
             {msg.role === "assistant" && (
               <button
                 type="button"
-                onClick={() => onUseAsPrompt(msg.content)}
-                className="text-xs mt-1 px-2 py-0.5 rounded bg-blue-500 text-white hover:bg-blue-600"
+                onClick={() => {
+                  onUseAsPrompt(msg.content);
+                  setCopiedIndex(i);
+                  clearTimeout(copiedTimerRef.current);
+                  copiedTimerRef.current = setTimeout(() => setCopiedIndex(null), 1500);
+                }}
+                className={`text-xs mt-1 px-2 py-0.5 rounded text-white ${
+                  copiedIndex === i
+                    ? "bg-green-500"
+                    : "bg-blue-500 hover:bg-blue-600"
+                }`}
               >
-                Use as prompt ↗
+                {copiedIndex === i ? "Copied to prompt ✓" : "Use as prompt ↗"}
               </button>
             )}
           </div>
