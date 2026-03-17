@@ -2,18 +2,24 @@ import React, { useEffect, useRef, useState } from "react";
 import { LoadingIcon } from "../Icons/LoadingIcon.tsx";
 import { StopIcon } from "../Icons/StopIcon.tsx";
 import { SendIcon } from "../Icons/SendIcon.tsx";
+import { AiChatIcon } from "../Icons/AiChatIcon.tsx";
 
 export interface ChatInputProps {
   className?: string;
   loading: boolean;
   inputFocusToken?: string
+  prefillText?: string
 
   onSend (text: string, secs: number): void;
 
   onCancel (): void;
+
+  onToggleLmStudio? (): void;
+
+  lmStudioOpen?: boolean;
 }
 
-const ChatInput = ({ className = '', inputFocusToken, onSend, loading, onCancel }: ChatInputProps) => {
+const ChatInput = ({ className = '', inputFocusToken, onSend, loading, onCancel, onToggleLmStudio, lmStudioOpen, prefillText }: ChatInputProps) => {
   const [audioDuration, setAudioDuration] = useState(10)
 
   const [aborting, setAborting] = useState(false)
@@ -25,6 +31,13 @@ const ChatInput = ({ className = '', inputFocusToken, onSend, loading, onCancel 
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState("");
+
+  useEffect(() => {
+    if (prefillText) {
+      setInputValue(prefillText);
+      inputRef.current?.focus();
+    }
+  }, [prefillText]);
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -58,6 +71,20 @@ const ChatInput = ({ className = '', inputFocusToken, onSend, loading, onCancel 
 
   return (
     <form onSubmit={handleSubmit} className={`flex relative ${className}`}>
+      {onToggleLmStudio && (
+        <button
+          type="button"
+          onClick={onToggleLmStudio}
+          title="AI Prompt Assistant (LM Studio)"
+          className={`p-2 mr-1 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+            lmStudioOpen
+              ? 'bg-blue-500 text-white'
+              : 'bg-[var(--input-background-color)] text-[var(--text-color)] border border-[var(--input-border-color)]'
+          }`}
+        >
+          <AiChatIcon/>
+        </button>
+      )}
       <input
         type="number"
         id="audioDuration"
