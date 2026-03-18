@@ -17,7 +17,9 @@ mod web_ui {
 
     pub fn build() -> Result<(), Box<dyn std::error::Error>> {
         let manifest_dir =
-            PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set"));
+            PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect(
+                "CARGO_MANIFEST_DIR must be set by Cargo during build",
+            ));
         let web_dir = manifest_dir.join("web");
 
         // Tell Cargo to rerun this build script when web sources change.
