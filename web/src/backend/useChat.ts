@@ -70,10 +70,10 @@ export function useChat (chat_id: string | undefined, onNewChat: (chat_id: strin
   function sendMessage (prompt: string, secs: number) {
     const id = uuid();
     if (chat_id !== undefined) {
-      send({ GenerateAudio: { id, chat_id, prompt, secs: clamp(1, secs, 30) } });
+      send({ GenerateAudio: { id, chat_id, prompt, secs: clamp(1, secs, 600) } });
     } else {
       const chat_id = uuid()
-      send({ GenerateAudioNewChat: { id, chat_id, prompt, secs: clamp(1, secs, 30) } })
+      send({ GenerateAudioNewChat: { id, chat_id, prompt, secs: clamp(1, secs, 600) } })
       setHistory(new ChatHistory(chat_id))
       onNewChat(chat_id)
     }

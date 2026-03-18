@@ -77,7 +77,7 @@ with multiple model sizes and optional GPU acceleration.
 | **CLI mode** | Generate and play music straight from the terminal — great for scripting and quick experiments. |
 | **Dark / Light theme** | One-click toggle between dark and light mode. |
 | **Chat history** | Persistent chat sessions you can revisit, rename, or delete. |
-| **Configurable duration** | Generate audio clips from 1 to 30 seconds. |
+| **Configurable duration** | Generate audio clips from 1 to 600 seconds (10 minutes). |
 | **Multiple model sizes** | Choose from Small, Medium, or Large MusicGen models (plus FP16 and quantized variants). |
 | **GPU acceleration** | Optional CUDA, TensorRT (NVIDIA), and CoreML (Apple Silicon) support for faster inference. |
 | **LM Studio prompt assistant** | Experimental integration with [LM Studio](https://lmstudio.ai/) to help craft better music prompts using a local LLM. |
@@ -152,7 +152,7 @@ This opens a chat-like application in your browser where you can:
 - Write natural language prompts and receive generated audio
 - Play back generated music samples with the built-in audio player
 - Browse and manage your chat history via the sidebar drawer
-- Configure audio duration (1–30 s) with the duration control
+- Configure audio duration (1–600 s) with the duration control
 - Toggle between dark and light themes
 - Optionally use the **LM Studio prompt assistant** to craft better prompts
 
@@ -181,10 +181,10 @@ Generate and play music directly in the terminal:
 musicgpt "Create a relaxing LoFi song"
 ```
 
-Adjust the duration (default is 10 s, max 30 s):
+Adjust the duration (default is 10 s, max 600 s / 10 min):
 
 ```shell
-musicgpt "Create a relaxing LoFi song" --secs 30
+musicgpt "Create a relaxing LoFi song" --secs 120
 ```
 
 Use a larger model:
