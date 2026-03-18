@@ -89,7 +89,7 @@ const ChatInput = ({ className = '', inputFocusToken, onSend, loading, onCancel,
         type="number"
         id="audioDuration"
         min="1"
-        max="30"
+        max="600"
         placeholder={"Duration (s)"}
         value={audioDuration}
         onChange={handleAudioChange}
