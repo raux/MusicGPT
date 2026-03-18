@@ -1,9 +1,139 @@
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-changed=Cargo.toml");
     println!("cargo:rerun-if-env-changed=CARGO_FEATURE_ONNXRUNTIME_FROM_SOURCE");
+    web_ui::build()?;
     build::build()?;
     built::write_built_file()?;
     Ok(())
+}
+
+/// Builds the React 18 + TypeScript + Tailwind CSS frontend into a single HTML
+/// file at `web/dist/index.html` so it can be embedded in the binary via
+/// `include_str!()` at compile time.
+mod web_ui {
+    use std::path::{Path, PathBuf};
+    use std::process::Command;
+    use std::{env, fs};
+
+    pub fn build() -> Result<(), Box<dyn std::error::Error>> {
+        let manifest_dir =
+            PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set"));
+        let web_dir = manifest_dir.join("web");
+
+        // Tell Cargo to rerun this build script when web sources change.
+        rerun_if_changed(&web_dir);
+        println!("cargo:rerun-if-env-changed=SKIP_WEB_BUILD");
+
+        // When SKIP_WEB_BUILD is set (e.g. for quick iteration on Rust-only
+        // changes), skip the frontend build entirely provided a previously
+        // built index.html already exists.
+        if env::var("SKIP_WEB_BUILD").is_ok() {
+            let index = web_dir.join("dist").join("index.html");
+            if index.exists() {
+                println!(
+                    "cargo:warning=SKIP_WEB_BUILD is set and web/dist/index.html exists – skipping frontend build"
+                );
+                return Ok(());
+            }
+            println!(
+                "cargo:warning=SKIP_WEB_BUILD is set but web/dist/index.html is missing – building frontend anyway"
+            );
+        }
+
+        // Determine the npm binary name (npm.cmd on Windows).
+        let npm = if cfg!(target_os = "windows") {
+            "npm.cmd"
+        } else {
+            "npm"
+        };
+
+        // --- npm ci --------------------------------------------------------
+        println!("cargo:warning=Running `npm ci` in web/ ...");
+        let status = Command::new(npm)
+            .arg("ci")
+            .current_dir(&web_dir)
+            .status()
+            .map_err(|e| {
+                format!(
+                    "Failed to run `{npm} ci` in {web_dir:?}. \
+                     Make sure Node.js and npm are installed. Error: {e}"
+                )
+            })?;
+
+        if !status.success() {
+            return Err(format!("`{npm} ci` exited with status {status}").into());
+        }
+
+        // --- npm run build -------------------------------------------------
+        println!("cargo:warning=Running `npm run build` in web/ ...");
+        let status = Command::new(npm)
+            .args(["run", "build"])
+            .current_dir(&web_dir)
+            .status()
+            .map_err(|e| {
+                format!(
+                    "Failed to run `{npm} run build` in {web_dir:?}. Error: {e}"
+                )
+            })?;
+
+        if !status.success() {
+            return Err(format!("`{npm} run build` exited with status {status}").into());
+        }
+
+        // Verify that the expected output was produced.
+        let index = web_dir.join("dist").join("index.html");
+        if !index.exists() {
+            return Err(format!(
+                "Frontend build succeeded but {index:?} was not created"
+            )
+            .into());
+        }
+
+        println!("cargo:warning=Frontend built successfully → web/dist/index.html");
+        Ok(())
+    }
+
+    /// Emit `cargo:rerun-if-changed` for every source file under `web/` so
+    /// that the frontend is only rebuilt when something actually changes.
+    fn rerun_if_changed(web_dir: &Path) {
+        // Key config files
+        for name in [
+            "package.json",
+            "package-lock.json",
+            "vite.config.ts",
+            "tsconfig.json",
+            "tsconfig.node.json",
+            "tailwind.config.js",
+            "postcss.config.js",
+            "index.html",
+        ] {
+            let p = web_dir.join(name);
+            if p.exists() {
+                println!("cargo:rerun-if-changed={}", p.display());
+            }
+        }
+
+        // All files under web/src/
+        let src_dir = web_dir.join("src");
+        if src_dir.is_dir() {
+            walk_dir(&src_dir);
+        }
+    }
+
+    fn walk_dir(dir: &Path) {
+        let entries = match fs::read_dir(dir) {
+            Ok(e) => e,
+            Err(_) => return,
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                walk_dir(&path);
+            } else {
+                println!("cargo:rerun-if-changed={}", path.display());
+            }
+        }
+    }
 }
 
 #[cfg(all(
